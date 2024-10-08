@@ -1,0 +1,47 @@
+int gridSize = 9;
+int cellSize = 100;
+int boardSize = gridSize * cellSize;
+int selectedX = -1;
+int selectedY = -1;
+
+void setup() {
+  size(900, 900);
+  
+}
+void draw(){
+  drawGrid();
+}
+
+void drawGrid() {
+  background(255);  
+  
+  for (int i = 0; i < gridSize; i++) {
+    for (int j = 0; j < gridSize; j++) {
+      if (i == selectedX && j == selectedY) {
+        fill(200); 
+      } else {
+        fill(255); 
+      }
+      strokeWeight(1);
+      rect(i * cellSize, j * cellSize, cellSize, cellSize);
+    }
+  }
+  
+  for (int i = 0; i <= gridSize; i++) {
+    if (i % 3 == 0) {
+      strokeWeight(4); 
+      line(i * cellSize, 0, i * cellSize, boardSize);
+      line(0, i * cellSize, boardSize, i * cellSize); 
+    }
+  }
+}
+
+void mousePressed() {
+  int x = mouseX / cellSize;
+  int y = mouseY / cellSize;
+  
+  if (x < gridSize && y < gridSize) {
+    selectedX = x;
+    selectedY = y;
+  }
+}
