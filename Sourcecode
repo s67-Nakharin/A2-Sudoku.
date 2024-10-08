@@ -4,6 +4,8 @@ int boardSize = gridSize * cellSize;
 int selectedX = -1;
 int selectedY = -1;
 int[][] board = new int[gridSize][gridSize];
+boolean showGame = false;
+String fileName = "boardData.txt";
 
 void setup() {
   size(900, 900);
@@ -11,7 +13,28 @@ void setup() {
 }
 
 void draw(){
-  drawGrid();
+  if (showGame) {
+    drawGrid();
+  } else {
+    drawStartScreen();
+  }
+}
+
+void drawStartScreen() {
+  background(255);
+
+  fill(0);
+  textSize(64);
+  textAlign(CENTER, CENTER);
+  text("Sudoku by nkr", width / 2, height / 4);
+
+  fill(200);
+  rect(width / 2 - 125, height / 2 - 50, 250, 100);
+
+  fill(0);
+  textSize(48);
+  textAlign(CENTER, CENTER);
+  text("Start", width / 2, height / 2);
 }
 
 void drawGrid() {
@@ -43,17 +66,21 @@ void drawGrid() {
   }
 }
 
-
 void mousePressed() {
-  int x = mouseX / cellSize;
-  int y = mouseY / cellSize;
-  
-  if (x < gridSize && y < gridSize) {  
-    selectedX = x;
-    selectedY = y;
+  if (!showGame) {
+    if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > height / 2 - 50 && mouseY < height / 2 + 50) {
+      showGame = true; 
+    }
+  } else {
+    int x = mouseX / cellSize;
+    int y = mouseY / cellSize;
+
+    if (x < gridSize && y < gridSize) {  
+      selectedX = x;
+      selectedY = y;
+    }
   }
 }
-
 
 void initializeBoard() { 
   int[][] initialValues = {
