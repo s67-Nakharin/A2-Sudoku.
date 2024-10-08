@@ -3,11 +3,13 @@ int cellSize = 100;
 int boardSize = gridSize * cellSize;
 int selectedX = -1;
 int selectedY = -1;
+int[][] board = new int[gridSize][gridSize];
 
 void setup() {
   size(900, 900);
-  
+  initializeBoard();
 }
+
 void draw(){
   drawGrid();
 }
@@ -15,7 +17,7 @@ void draw(){
 void drawGrid() {
   background(255);  
   
-  for (int i = 0; i < gridSize; i++) {
+  for (int i = 0; i < gridSize; i++) { 
     for (int j = 0; j < gridSize; j++) {
       if (i == selectedX && j == selectedY) {
         fill(200); 
@@ -24,6 +26,11 @@ void drawGrid() {
       }
       strokeWeight(1);
       rect(i * cellSize, j * cellSize, cellSize, cellSize);
+      
+      fill(0); 
+      textSize(32);
+      textAlign(CENTER, CENTER);
+      text(board[i][j], i * cellSize + cellSize / 2, j * cellSize + cellSize / 2); 
     }
   }
   
@@ -36,12 +43,34 @@ void drawGrid() {
   }
 }
 
+
 void mousePressed() {
   int x = mouseX / cellSize;
   int y = mouseY / cellSize;
   
-  if (x < gridSize && y < gridSize) {
+  if (x < gridSize && y < gridSize) {  
     selectedX = x;
     selectedY = y;
+  }
+}
+
+
+void initializeBoard() { 
+  int[][] initialValues = {
+    {5, 3, 0, 0, 7, 0, 0, 0, 0},
+    {6, 0, 0, 1, 9, 5, 0, 0, 0},
+    {0, 9, 8, 0, 0, 0, 0, 6, 0},
+    {8, 0, 0, 0, 6, 0, 0, 0, 3},
+    {4, 0, 0, 8, 0, 3, 0, 0, 1},
+    {7, 0, 0, 0, 2, 0, 0, 0, 6},
+    {0, 6, 0, 0, 0, 0, 2, 8, 0},
+    {0, 0, 0, 4, 1, 9, 0, 0, 5},
+    {0, 0, 0, 0, 8, 0, 0, 7, 9}
+  };
+  
+  for (int i = 0; i < gridSize; i++) {
+    for (int j = 0; j < gridSize; j++) {
+      board[i][j] = initialValues[i][j];
+    }
   }
 }
