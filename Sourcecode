@@ -5,12 +5,14 @@ int selectedX = -1;
 int selectedY = -1;
 int[][] board = new int[gridSize][gridSize];
 boolean showGame = false;
+boolean[][] visible = new boolean[gridSize][gridSize];
+boolean isLoading = false;
 String fileName = "boardData.txt";
-int attempts = 0; 
 
 void setup() {
   size(720, 900);
   fillBoard();
+  fillVisible();
 }
 
 void draw() {
@@ -35,7 +37,7 @@ void drawStartScreen() {
   fill(0);
   textSize(48);
   textAlign(CENTER, CENTER);
-  text("Start", width / 2, height / 2 - 50);
+  text("New Game", width / 2, height / 2 - 50);
 
   fill(200);
   rect(width / 2 - 125, height / 2 + 50, 250, 100);
@@ -43,7 +45,7 @@ void drawStartScreen() {
   fill(0);
   textSize(48);
   textAlign(CENTER, CENTER);
-  text("Continue", width / 2, height / 2 + 100);
+  text("Load Save", width / 2, height / 2 + 100);
 }
 
 void drawGrid() {
@@ -52,19 +54,22 @@ void drawGrid() {
   for (int row = 0; row < gridSize; row++) {
     for (int col = 0; col < gridSize; col++) {
       if (row == selectedY && col == selectedX) {
-        fill(200);
+        fill(200); 
       } else {
         fill(255);
       }
       strokeWeight(1);
-      rect(col * cellSize, row * cellSize, cellSize, cellSize); 
+      rect(col * cellSize, row * cellSize, cellSize, cellSize);
 
-      fill(0);
-      textSize(32);
-      textAlign(CENTER, CENTER);
-      text(board[row][col], col * cellSize + cellSize / 2, row * cellSize + cellSize / 2 + 5);
+      if (visible[row][col]) { 
+        fill(0);
+        textSize(32);
+        textAlign(CENTER, CENTER);
+        text(board[row][col], col * cellSize + cellSize / 2, row * cellSize + cellSize / 2 + 5);
+      }
     }
   }
+
 
   for (int i = 0; i <= gridSize; i++) {
     if (i % 3 == 0) {
@@ -77,7 +82,7 @@ void drawGrid() {
   fill(0);
   textSize(32);
   textAlign(CENTER, CENTER);
-  text("Attempts: " + attempts, width / 2, boardSize + 20); 
+  text("Attempts: ", width / 2, boardSize + 20);
 
   fill(200);
   rect(width / 2 - 125, boardSize + 60, 250, 100);
@@ -90,9 +95,14 @@ void drawGrid() {
 void mousePressed() {
   if (!showGame) {
     if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > height / 2 - 100 && mouseY < height / 2) {
+      // New Game
       showGame = true;
+      fillBoard();
+      fillVisible();
     } else if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > height / 2 + 50 && mouseY < height / 2 + 150) {
+      // Load Save
       loadBoard();
+      isLoading = true;
       showGame = true;
     }
   } else {
@@ -102,7 +112,6 @@ void mousePressed() {
     if (col < gridSize && row < gridSize) {
       selectedX = col;
       selectedY = row;
-      attempts++;
     }
 
     if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > boardSize + 60 && mouseY < boardSize + 160) {
@@ -143,10 +152,19 @@ boolean fillBoard(int row, int col, int[] numbers) {
   return false;
 }
 
+void fillVisible() {
+  if (!isLoading) {
+    for (int row = 0; row < gridSize; row++) {
+      for (int col = 0; col < gridSize; col++) {
+        visible[row][col] = random(1) < 0.5;
+      }
+    }
+  }
+}
+
 void shuffleArray(int[] array) {
   for (int i = array.length - 1; i > 0; i--) {
     int index = (int) random(i + 1);
-
     int temp = array[index];
     array[index] = array[i];
     array[i] = temp;
@@ -154,7 +172,6 @@ void shuffleArray(int[] array) {
 }
 
 boolean isValid(int num, int row, int col) {
-
   for (int i = 0; i < gridSize; i++) {
     if (board[row][i] == num) {
       return false;
@@ -181,10 +198,22 @@ boolean isValid(int num, int row, int col) {
 
 void saveBoard() {
   PrintWriter output = createWriter(fileName);
+  
 
   for (int i = 0; i < gridSize; i++) {
     for (int j = 0; j < gridSize; j++) {
       output.print(board[i][j]);
+      if (j < gridSize - 1) {
+        output.print(",");
+      }
+    }
+    output.println();
+  }
+  
+
+  for (int i = 0; i < gridSize; i++) {
+    for (int j = 0; j < gridSize; j++) {
+      output.print(visible[i][j] ? "1" : "0");
       if (j < gridSize - 1) {
         output.print(",");
       }
@@ -199,13 +228,23 @@ void saveBoard() {
 void loadBoard() {
   String[] lines = loadStrings(fileName);
 
-  if (lines != null && lines.length == gridSize) {
+  if (lines != null && lines.length >= 2) {
+
     for (int i = 0; i < gridSize; i++) {
       String[] values = lines[i].split(",");
       for (int j = 0; j < gridSize; j++) {
         board[i][j] = int(values[j]);
       }
     }
+
+    for (int i = 0; i < gridSize; i++) {
+      String[] values = lines[i + gridSize].split(",");
+      for (int j = 0; j < gridSize; j++) {
+        visible[i][j] = values[j].equals("1");
+      }
+    }
+    
+    isLoading = false;
     println("Board loaded from " + fileName);
   } else {
     println("Failed to load board or incorrect file format.");
