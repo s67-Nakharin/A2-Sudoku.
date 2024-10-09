@@ -7,6 +7,7 @@ int[][] board = new int[gridSize][gridSize];
 boolean showGame = false;
 boolean[][] visible = new boolean[gridSize][gridSize];
 boolean isLoading = false;
+boolean[][] isInvalid = new boolean[gridSize][gridSize];
 String fileName = "boardData.txt";
 
 void setup() {
@@ -53,7 +54,9 @@ void drawGrid() {
 
   for (int row = 0; row < gridSize; row++) {
     for (int col = 0; col < gridSize; col++) {
-      if (row == selectedY && col == selectedX) {
+      if (isInvalid[row][col]) {
+        fill(255, 0, 0);  // ไฮไลต์ด้วยสีแดงเมื่อช่องผิด
+      } else if (row == selectedY && col == selectedX) {
         fill(200); 
       } else {
         fill(255);
@@ -69,7 +72,6 @@ void drawGrid() {
       }
     }
   }
-
 
   for (int i = 0; i <= gridSize; i++) {
     if (i % 3 == 0) {
@@ -92,15 +94,17 @@ void drawGrid() {
   text("Save Game", width / 2, boardSize + 110);
 }
 
+
 void mousePressed() {
   if (!showGame) {
+    // Handle the start screen buttons
     if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > height / 2 - 100 && mouseY < height / 2) {
-      // New Game
+      // New Game button
       showGame = true;
       fillBoard();
       fillVisible();
     } else if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > height / 2 + 50 && mouseY < height / 2 + 150) {
-      // Load Save
+      // Load Save button
       loadBoard();
       isLoading = true;
       showGame = true;
@@ -109,16 +113,51 @@ void mousePressed() {
     int col = mouseX / cellSize;
     int row = mouseY / cellSize;
 
-    if (col < gridSize && row < gridSize) {
+    // Check if the selected cell is within the grid and is not already visible
+    if (col < gridSize && row < gridSize && !visible[row][col]) {
       selectedX = col;
       selectedY = row;
     }
 
+    // Save button
     if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > boardSize + 60 && mouseY < boardSize + 160) {
       saveBoard();
     }
   }
 }
+
+
+void keyPressed() {
+  if (selectedX != -1 && selectedY != -1 && !visible[selectedY][selectedX]) {
+    int num = key - '0';  // แปลงจาก char เป็นตัวเลข
+    if (num >= 1 && num <= 9) {
+      // ตรวจสอบว่าตัวเลขถูกต้องตามกฎ Sudoku หรือไม่
+      if (isValid(num, selectedY, selectedX)) {
+        board[selectedY][selectedX] = num;  // ถ้า valid ใส่เลขลงไป
+        visible[selectedY][selectedX] = true;  // และทำให้ช่องนี้ถูกแสดง
+        isInvalid[selectedY][selectedX] = false;  // เคลียร์ไฮไลต์สีแดงถ้าเลขถูกต้อง
+        drawGrid();  // รีเฟรชกริดเพื่อแสดงเลขที่ใส่ใหม่
+      } else {
+        println("Invalid number!");  // แสดงข้อความว่าตัวเลขไม่ถูกต้อง
+        isInvalid[selectedY][selectedX] = true;  // ไฮไลต์สีแดงช่องที่ผิด
+        drawGrid();  // รีเฟรชกริดเพื่อแสดงไฮไลต์สีแดง
+      }
+    }
+  }
+}
+
+
+
+
+
+void highlightInvalidCell() {
+  fill(255, 0, 0);  // สีแดง
+  rect(selectedX * cellSize, selectedY * cellSize, cellSize, cellSize);
+  delay(500);  // รอ 500ms เพื่อแสดงสีแดง แล้วกลับไปเป็นสีเดิม
+  drawGrid();  // รีเฟรชกริดใหม่เพื่อคืนค่าเป็นสีปกติ
+}
+
+
 
 void fillBoard() {
   int[] numbers = {1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -156,7 +195,7 @@ void fillVisible() {
   if (!isLoading) {
     for (int row = 0; row < gridSize; row++) {
       for (int col = 0; col < gridSize; col++) {
-        visible[row][col] = random(1) < 0.5;
+        visible[row][col] = random(1) < 0.8;
       }
     }
   }
@@ -172,29 +211,34 @@ void shuffleArray(int[] array) {
 }
 
 boolean isValid(int num, int row, int col) {
+  // ตรวจสอบในแถว
   for (int i = 0; i < gridSize; i++) {
-    if (board[row][i] == num) {
-      return false;
+    if (board[row][i] == num && i != col) {
+      return false;  // ถ้าตัวเลขอยู่ในแถวเดียวกัน แต่เป็นตำแหน่งอื่น
     }
   }
 
+  // ตรวจสอบในคอลัมน์
   for (int i = 0; i < gridSize; i++) {
-    if (board[i][col] == num) {
-      return false;
+    if (board[i][col] == num && i != row) {
+      return false;  // ถ้าตัวเลขอยู่ในคอลัมน์เดียวกัน แต่เป็นตำแหน่งอื่น
     }
   }
 
+  // ตรวจสอบในบล็อกย่อย 3x3
   int boxRowStart = (row / 3) * 3;
   int boxColStart = (col / 3) * 3;
   for (int i = boxRowStart; i < boxRowStart + 3; i++) {
     for (int j = boxColStart; j < boxColStart + 3; j++) {
-      if (board[i][j] == num) {
-        return false;
+      if (board[i][j] == num && (i != row || j != col)) {
+        return false;  // ถ้าตัวเลขอยู่ในบล็อก 3x3 แต่เป็นตำแหน่งอื่น
       }
     }
   }
-  return true;
+
+  return true;  // ถ้าตัวเลขนี้สามารถใส่ได้ในตำแหน่งที่เลือก
 }
+
 
 void saveBoard() {
   PrintWriter output = createWriter(fileName);
