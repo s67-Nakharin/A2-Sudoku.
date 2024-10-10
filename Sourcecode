@@ -5,7 +5,9 @@ int selectedX = -1;
 int selectedY = -1;
 int attempts = 0; 
 int[][] board = new int[gridSize][gridSize];
+float difficult = 0.55;
 boolean showGame = false;
+boolean modeSelect = false;
 boolean gameOver = false;
 boolean hasWon = false;
 boolean[][] visible = new boolean[gridSize][gridSize];
@@ -28,6 +30,8 @@ void draw() {
     drawEndScreen();
   } else if (showGame) {
     drawGrid();
+  } else if (modeSelect) {
+    drawModeSelectScreen();
   } else {
     drawStartScreen();
   }
@@ -36,7 +40,6 @@ void draw() {
 
 void drawStartScreen() {
   background(255);
-  
   fill(0);
   textSize(64);
   textAlign(CENTER, CENTER);
@@ -44,7 +47,6 @@ void drawStartScreen() {
 
   fill(200);
   rect(width / 2 - 125, height / 2 - 100, 250, 100);
-  
   fill(0);
   textSize(48);
   textAlign(CENTER, CENTER);
@@ -52,11 +54,28 @@ void drawStartScreen() {
 
   fill(200);
   rect(width / 2 - 125, height / 2 + 50, 250, 100);
-
   fill(0);
   textSize(48);
   textAlign(CENTER, CENTER);
   text("Load Save", width / 2, height / 2 + 100);
+}
+
+
+void drawModeSelectScreen() {
+  background(255);
+  fill(0);
+  textSize(48);
+  textAlign(CENTER, CENTER);
+  text("Select Difficulty", width / 2, height / 4);
+
+  String[] difficulties = {"Easy", "Normal", "Hard", "Expert"};
+
+  for (int i = 0; i < difficulties.length; i++) {
+    fill(200);
+    rect(width / 2 - 125, height / 2 - 150 + i * 100, 250, 80);
+    fill(0);
+    text(difficulties[i], width / 2, height / 2 - 100 + i * 100);
+  }
 }
 
 
@@ -128,35 +147,49 @@ void mousePressed() {
     return;
   }
 
-  if (!showGame) {
-
+  if (!showGame && !modeSelect) {
     if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > height / 2 - 100 && mouseY < height / 2) {
-
-      showGame = true;
-      fillBoard();
-      fillVisible();
+      modeSelect = true;
     } else if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > height / 2 + 50 && mouseY < height / 2 + 150) {
-
       loadBoard();
       isLoading = true;
       showGame = true;
     }
-  } else {
-    int col = mouseX / cellSize;
-    int row = mouseY / cellSize;
+  } else if (modeSelect) {
+    if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125) {
+      if (mouseY > height / 2 - 150 && mouseY < height / 2 - 70) {
+        difficult = 0.75; // Easy
+      } else if (mouseY > height / 2 - 50 && mouseY < height / 2 + 30) {
+        difficult = 0.55; // Normal
+      } else if (mouseY > height / 2 + 50 && mouseY < height / 2 + 130) {
+        difficult = 0.45; // Hard
+      } else if (mouseY > height / 2 + 150 && mouseY < height / 2 + 230) {
+        difficult = 0.3; // Expert
+      }
 
-
-    if (col < gridSize && row < gridSize && !visible[row][col]) {
-      selectedX = col;
-      selectedY = row;
+      modeSelect = false;
+      showGame = true;
+      selectedX = -1;
+      selectedY = -1;
+      attempts = 0;
+      gameOver = false;
+      hasWon = false;
+      fillBoard();
+      fillVisible();
     }
-
-
+  } else {
+    if (mouseX >= 0 && mouseX < boardSize && mouseY >= 0 && mouseY < boardSize) {
+      selectedX = mouseX / cellSize;
+      selectedY = mouseY / cellSize;
+      println("Selected cell: (" + selectedX + ", " + selectedY + ")");
+    }
+    
     if (mouseX > width / 2 - 125 && mouseX < width / 2 + 125 && mouseY > boardSize + 60 && mouseY < boardSize + 160) {
       saveBoard();
     }
   }
 }
+
 
 
 void keyPressed() {
@@ -245,7 +278,7 @@ void fillVisible() {
   if (!isLoading) {
     for (int row = 0; row < gridSize; row++) {
       for (int col = 0; col < gridSize; col++) {
-        visible[row][col] = random(1) < 0.6;
+        visible[row][col] = random(1) < difficult;
       }
     }
   }
