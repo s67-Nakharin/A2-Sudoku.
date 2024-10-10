@@ -9,8 +9,8 @@ boolean showGame = false;
 boolean gameOver = false;
 boolean hasWon = false;
 boolean[][] visible = new boolean[gridSize][gridSize];
-boolean isLoading = false;
 boolean[][] isInvalid = new boolean[gridSize][gridSize];
+boolean isLoading = false;
 String fileName = "boardData.txt";
 
 
@@ -245,7 +245,7 @@ void fillVisible() {
   if (!isLoading) {
     for (int row = 0; row < gridSize; row++) {
       for (int col = 0; col < gridSize; col++) {
-        visible[row][col] = random(1) < 0.8;
+        visible[row][col] = random(1) < 0.6;
       }
     }
   }
@@ -315,15 +315,18 @@ void saveBoard() {
     output.println();
   }
 
+  output.println(attempts);
+
   output.close();
-  println("Board saved to " + fileName);
+  println("Board and attempts saved to " + fileName);
 }
+
 
 
 void loadBoard() {
   String[] lines = loadStrings(fileName);
 
-  if (lines != null && lines.length >= 2) {
+  if (lines != null && lines.length >= gridSize * 2 + 1) { 
 
     for (int i = 0; i < gridSize; i++) {
       String[] values = lines[i].split(",");
@@ -338,9 +341,11 @@ void loadBoard() {
         visible[i][j] = values[j].equals("1");
       }
     }
+
+    attempts = int(lines[gridSize * 2]); 
     
     isLoading = false;
-    println("Board loaded from " + fileName);
+    println("Board and attempts loaded from " + fileName);
   } else {
     println("Failed to load board or incorrect file format.");
   }
